@@ -5,7 +5,7 @@ ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 cd "$ROOT"
 
 if [ ! -d frontend ]; then
-    echo "frontend/ is missing. Run: git submodule update --init --recursive" >&2
+    echo "frontend/ is missing. The frontend sources are tracked in this repository; restore them from the checkout." >&2
     exit 1
 fi
 

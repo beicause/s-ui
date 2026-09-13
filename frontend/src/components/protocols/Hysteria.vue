@@ -1,0 +1,124 @@
+<template>
+  <v-card subtitle="Hysteria">
+    <v-row>
+      <v-col cols="12" sm="6" md="4">
+        <v-text-field
+        :label="$t('stats.upload')"
+        hide-details
+        type="number"
+        :suffix="$t('stats.Mbps')"
+        v-model.number="up_mbps">
+        </v-text-field>
+      </v-col>
+      <v-col cols="12" sm="6" md="4">
+        <v-text-field
+        :label="$t('stats.download')"
+        hide-details
+        type="number"
+        :suffix="$t('stats.Mbps')"
+        min="0"
+        v-model.number="down_mbps">
+        </v-text-field>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col cols="12" sm="6" md="4">
+       <v-text-field
+       :label="$t('types.hy.obfs')"
+        hide-details
+        v-model="data.obfs">
+        </v-text-field>
+      </v-col>
+      <v-col cols="12" sm="6" md="4" v-if="direction=='out'">
+        <v-text-field
+        :label="$t('types.hy.auth')"
+        hide-details
+        v-model="data.auth_str">
+        </v-text-field>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col cols="12" sm="6" md="4" v-if="direction=='out'">
+        <Network :data="data" />
+      </v-col>
+    </v-row>
+    <v-row v-if="direction=='out'">
+      <v-col cols="12" sm="8" v-if="optionMPort">
+        <v-text-field
+          :label="$t('rule.portRange') + ' ' + $t('commaSeparated')"
+          v-model="server_ports">
+        </v-text-field>
+      </v-col>
+      <v-col cols="12" sm="6" md="4" v-if="optionMPort">
+        <v-text-field
+          label="Hop interval"
+          type="number"
+          min="0"
+          :suffix="$t('date.s')"
+          v-model.number="hop_interval">
+        </v-text-field>
+      </v-col>
+    </v-row>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-menu v-model="menu" :close-on-content-click="false" location="start">
+        <template v-slot:activator="{ props }">
+          <v-btn v-bind="props" hide-details variant="tonal">{{ $t('types.hy.hyOptions') }}</v-btn>
+        </template>
+        <v-card>
+          <v-list>
+            <v-list-item v-if="direction=='out'">
+              <v-switch v-model="optionMPort" color="primary" :label="$t('rule.portRange')" hide-details></v-switch>
+            </v-list-item>
+          </v-list>
+        </v-card>
+      </v-menu>
+    </v-card-actions>
+    <QuicFields :data="data" quic />
+  </v-card>
+</template>
+
+<script lang="ts">
+import QuicFields from '@/components/QuicFields.vue'
+import Network from '@/components/Network.vue'
+
+export default {
+  props: ['direction','data'],
+  data() {
+    return {
+      menu: false,
+    }
+  },
+  computed: {
+    optionMPort: {
+      get(): boolean { return this.$props.data.server_ports != undefined },
+      set(v:boolean) { this.$props.data.server_ports = v ? [] : undefined }
+    },
+    server_ports: {
+      get() { return this.$props.data.server_ports?.join(',') ?? '' },
+      set(v:string) { this.$props.data.server_ports = v.length > 0 ? v.split(',').map((s:string) => s.trim()) : undefined }
+    },
+    hop_interval: {
+      get() { return this.$props.data.hop_interval ? parseInt(this.$props.data.hop_interval.replace('s','')) : 0 },
+      set(v:number) { this.$props.data.hop_interval = v > 0 ? v + 's' : undefined }
+    },
+    down_mbps: {
+      get() { return this.$props.data.down_mbps ? this.$props.data.down_mbps : 0 },
+      set(newValue:any) {
+        if (newValue.length != 0 ){
+          this.$props.data.down_mbps = newValue
+          this.$props.data.down = "" + newValue + " Mbps"
+        } else {
+          this.$props.data.down_mbps = 0
+          this.$props.data.down = "0 Mbps"
+        }
+      }
+    },
+    up_mbps: {
+      get() { return this.$props.data.up_mbps ? this.$props.data.up_mbps : 0 },
+      set(newValue:number) { this.$props.data.up_mbps = newValue > 0 ? newValue : 0 }
+    },
+  },
+  components: { Network, QuicFields }
+}
+</script>
